@@ -27,6 +27,7 @@ version = "0.1.0"
 ext {
     kotlinVersion = "1.2.30"
     springBootVersion = "1.5.10.RELEASE"
+    postgreSqlVersion = "42.2.1"
 }
 
 repositories {
@@ -36,5 +37,6 @@ repositories {
 dependencies {
     compile("org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion")
     compile("org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion")
-    compile("org.springframework.boot:spring-boot-starter:$springBootVersion")
+    compile("org.springframework.boot:spring-boot-starter-batch:$springBootVersion")
+    compile("org.postgresql:postgresql:$postgreSqlVersion")
 }
