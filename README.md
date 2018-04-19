@@ -19,11 +19,11 @@ select ji.job_instance_id, ji.job_name, -- Job Instance
     se.status, se.exit_code, se.exit_message, -- Step Execution status
     sec.short_context, sec.serialized_context -- Step Execution Context
 from batch_job_instance ji
-    join batch_job_execution je on je.job_instance_id = ji.job_instance_id
-    join batch_job_execution_params jep on jep.job_execution_id = je.job_execution_id
-    join batch_job_execution_context jec on jec.job_execution_id = je.job_execution_id
-    join batch_step_execution se on se.job_execution_id = je.job_execution_id
-    join batch_step_execution_context sec on sec.step_execution_id = se.step_execution_id
+    left join batch_job_execution je on je.job_instance_id = ji.job_instance_id
+    left join batch_job_execution_params jep on jep.job_execution_id = je.job_execution_id
+    left join batch_job_execution_context jec on jec.job_execution_id = je.job_execution_id
+    left join batch_step_execution se on se.job_execution_id = je.job_execution_id
+    left join batch_step_execution_context sec on sec.step_execution_id = se.step_execution_id
 order by se.step_execution_id desc
 ```
 
