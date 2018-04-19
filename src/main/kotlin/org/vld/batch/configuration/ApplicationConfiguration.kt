@@ -1,4 +1,4 @@
-package org.vld.template.configuration
+package org.vld.batch.configuration
 
 import org.springframework.context.annotation.Configuration
 

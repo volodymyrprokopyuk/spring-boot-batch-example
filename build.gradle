@@ -19,7 +19,7 @@ apply plugin: "kotlin"
 apply plugin: "org.springframework.boot"
 
 springBoot {
-    mainClass = "org.vld.template.ApplicationKt"
+    mainClass = "org.vld.batch.ApplicationKt"
 }
 
 version = "0.1.0"
