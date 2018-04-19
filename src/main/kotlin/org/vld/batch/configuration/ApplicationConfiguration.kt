@@ -9,6 +9,7 @@ import org.springframework.batch.core.launch.support.RunIdIncrementer
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.vld.batch.listener.SimpleJobExecutionListener
 import org.vld.batch.tasklet.JobIdentificationTasklet
 
 @Configuration
@@ -25,6 +26,7 @@ open class ApplicationConfiguration {
     @Bean
     open fun simpleJob(): Job = jobBuilderFactory.get("simpleJob")
             .incrementer(RunIdIncrementer())
+            .listener(SimpleJobExecutionListener())
             .start(simpleStep())
             .build()
 
