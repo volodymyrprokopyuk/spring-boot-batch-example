@@ -1,5 +1,6 @@
 package org.vld.batch.tasklet
 
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.batch.core.StepContribution
 import org.springframework.batch.core.scope.context.ChunkContext
@@ -9,7 +10,7 @@ import org.springframework.batch.repeat.RepeatStatus
 class JobIdentificationTasklet : Tasklet {
 
     companion object {
-        val logger = LoggerFactory.getLogger(JobIdentificationTasklet::class.java)
+        val logger: Logger = LoggerFactory.getLogger(JobIdentificationTasklet::class.java)
     }
 
     override fun execute(contribution: StepContribution?, chunkContext: ChunkContext?): RepeatStatus {
@@ -17,7 +18,7 @@ class JobIdentificationTasklet : Tasklet {
         val jobName = jobExecution?.jobInstance?.jobName
         val jobInstanceId = jobExecution?.jobInstance?.id
         val jobExecutionId = jobExecution?.id
-        logger.info("TASKLET: jobName = ${jobName}, jobInstanceId = ${jobInstanceId}, jobExecutionId = ${jobExecutionId}")
+        logger.info("TASKLET: jobName = $jobName, jobInstanceId = $jobInstanceId, jobExecutionId = $jobExecutionId")
         return RepeatStatus.FINISHED
     }
 }

@@ -6,6 +6,7 @@ import org.springframework.batch.core.configuration.annotation.EnableBatchProces
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory
 import org.springframework.batch.core.launch.support.RunIdIncrementer
+import org.springframework.batch.item.ItemProcessor
 import org.springframework.batch.item.ItemReader
 import org.springframework.batch.item.ItemWriter
 import org.springframework.batch.item.database.BeanPropertyItemSqlParameterSourceProvider
@@ -25,6 +26,7 @@ import org.springframework.core.io.FileSystemResource
 import org.springframework.jdbc.core.BeanPropertyRowMapper
 import org.vld.batch.domain.Person
 import org.vld.batch.listener.SimpleJobExecutionListener
+import org.vld.batch.processor.UpperCasePeopleProcessor
 import org.vld.batch.tasklet.JobIdentificationTasklet
 import javax.sql.DataSource
 
@@ -70,6 +72,7 @@ open class ApplicationConfiguration {
             .writer(importPeopleWriter())
             .build()
 
+    // importPeopleReader
     @Bean
     open fun importPeopleReader(): ItemReader<Person> {
         val reader = FlatFileItemReader<Person>()
@@ -101,6 +104,7 @@ open class ApplicationConfiguration {
         return fieldSetMapper
     }
 
+    // importPeopleWriter
     @Bean
     open fun importPeopleWriter(): ItemWriter<Person> {
         val writer = JdbcBatchItemWriter<Person>()
@@ -122,9 +126,11 @@ open class ApplicationConfiguration {
     open fun exportPeopleStep(): Step = stepBuilderFactory.get("exportPeopleStep")
             .chunk<Person, Person>(1)
             .reader(exportPeopleReader())
+            .processor(upperCasePeopleProcessor())
             .writer(exportPeopleWriter())
             .build()
 
+    // exportPeopleReader
     @Bean
     open fun exportPeopleReader(): ItemReader<Person> {
         val reader = JdbcCursorItemReader<Person>()
@@ -134,6 +140,7 @@ open class ApplicationConfiguration {
         return reader
     }
 
+    // exportPeopleWriter
     @Bean
     open fun exportPeopleWriter(): ItemWriter<Person> {
         val writer = FlatFileItemWriter<Person>()
@@ -156,4 +163,8 @@ open class ApplicationConfiguration {
         fieldExtractor.setNames(arrayOf("firstName", "lastName"))
         return fieldExtractor
     }
+
+    // upperCasePeopleProcessor
+    @Bean
+    open fun upperCasePeopleProcessor(): ItemProcessor<Person, Person> = UpperCasePeopleProcessor()
 }
