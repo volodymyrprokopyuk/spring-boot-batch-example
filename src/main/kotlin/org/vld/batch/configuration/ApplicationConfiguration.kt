@@ -10,18 +10,19 @@ import org.springframework.batch.item.ItemReader
 import org.springframework.batch.item.ItemWriter
 import org.springframework.batch.item.database.BeanPropertyItemSqlParameterSourceProvider
 import org.springframework.batch.item.database.JdbcBatchItemWriter
+import org.springframework.batch.item.database.JdbcCursorItemReader
 import org.springframework.batch.item.file.FlatFileItemReader
+import org.springframework.batch.item.file.FlatFileItemWriter
 import org.springframework.batch.item.file.LineMapper
 import org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper
 import org.springframework.batch.item.file.mapping.DefaultLineMapper
 import org.springframework.batch.item.file.mapping.FieldSetMapper
-import org.springframework.batch.item.file.transform.DelimitedLineTokenizer
-import org.springframework.batch.item.file.transform.FieldSet
-import org.springframework.batch.item.file.transform.LineTokenizer
+import org.springframework.batch.item.file.transform.*
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.io.FileSystemResource
+import org.springframework.jdbc.core.BeanPropertyRowMapper
 import org.vld.batch.domain.Person
 import org.vld.batch.listener.SimpleJobExecutionListener
 import org.vld.batch.tasklet.JobIdentificationTasklet
@@ -40,7 +41,7 @@ open class ApplicationConfiguration {
     @Autowired
     private lateinit var dataSource: DataSource
 
-    // initialJob
+    // ** initialJob
     @Bean
     open fun initialJob(): Job = jobBuilderFactory.get("initialJob")
             .incrementer(RunIdIncrementer())
@@ -48,18 +49,20 @@ open class ApplicationConfiguration {
             .start(jobIdentificationStep())
             .build()
 
+    // jobIdentificationStep
     @Bean
     open fun jobIdentificationStep(): Step = stepBuilderFactory.get("jobIdentificationStep")
             .tasklet(JobIdentificationTasklet())
             .build()
 
-    // importPeopleJob
+    // ** importPeopleJob
     @Bean
     open fun importPeopleJob(): Job = jobBuilderFactory.get("importPeopleJob")
             .incrementer(RunIdIncrementer())
             .start(importPeopleStep())
             .build()
 
+    // importPeopleStep
     @Bean
     open fun importPeopleStep(): Step = stepBuilderFactory.get("importPeopleStep")
             .chunk<Person, Person>(1)
@@ -70,7 +73,7 @@ open class ApplicationConfiguration {
     @Bean
     open fun importPeopleReader(): ItemReader<Person> {
         val reader = FlatFileItemReader<Person>()
-        reader.setResource(FileSystemResource("data/people.txt"))
+        reader.setResource(FileSystemResource("data/people.txt")) // TODO
         reader.setLineMapper(importPeopleLineMapper())
         return reader
     }
@@ -107,5 +110,50 @@ open class ApplicationConfiguration {
         return writer
     }
 
-    // exportPeopleJob
+    // ** exportPeopleJob
+    @Bean
+    open fun exportPeopleJob(): Job = jobBuilderFactory.get("exportPeopleJob")
+            .incrementer(RunIdIncrementer())
+            .start(exportPeopleStep())
+            .build()
+
+    // exportPeopleStep
+    @Bean
+    open fun exportPeopleStep(): Step = stepBuilderFactory.get("exportPeopleStep")
+            .chunk<Person, Person>(1)
+            .reader(exportPeopleReader())
+            .writer(exportPeopleWriter())
+            .build()
+
+    @Bean
+    open fun exportPeopleReader(): ItemReader<Person> {
+        val reader = JdbcCursorItemReader<Person>()
+        reader.dataSource = dataSource
+        reader.sql = "SELECT p.first_name, p.last_name FROM family.person p"
+        reader.setRowMapper(BeanPropertyRowMapper(Person::class.java))
+        return reader
+    }
+
+    @Bean
+    open fun exportPeopleWriter(): ItemWriter<Person> {
+        val writer = FlatFileItemWriter<Person>()
+        writer.setResource(FileSystemResource("data/people-export.txt")) // TODO
+        writer.setLineAggregator(exportPeopleLineAggregator())
+        return writer
+    }
+
+    @Bean
+    open fun exportPeopleLineAggregator(): LineAggregator<Person> {
+        val lineAggregator = DelimitedLineAggregator<Person>()
+        lineAggregator.setDelimiter(",")
+        lineAggregator.setFieldExtractor(exportPeopleFieldExtractor())
+        return lineAggregator
+    }
+
+    @Bean
+    open fun exportPeopleFieldExtractor(): FieldExtractor<Person> {
+        val fieldExtractor = BeanWrapperFieldExtractor<Person>()
+        fieldExtractor.setNames(arrayOf("firstName", "lastName"))
+        return fieldExtractor
+    }
 }

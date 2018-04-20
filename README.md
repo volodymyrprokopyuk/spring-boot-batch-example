@@ -10,7 +10,7 @@ SELECT * FROM family.person;
 
 Spring Batch Job Execution status SQL query
 ```sql
-select ji.job_instance_id, ji.job_name, -- Job Instance
+SELECT ji.job_instance_id, ji.job_name, -- Job Instance
     je.job_execution_id, je.start_time, je.end_time, je.status, je.exit_code, je.exit_message, -- Job Execution
     jep.key_name, jep.type_cd, jep.long_val, jep.double_val, jep.string_val, jep.date_val, -- Job Parameters
     jec.short_context, jec.serialized_context, -- Job Execution Context
@@ -18,12 +18,12 @@ select ji.job_instance_id, ji.job_name, -- Job Instance
     se.read_count, se.write_count, se.commit_count, se.rollback_count, -- Step Execution counts
     se.status, se.exit_code, se.exit_message, -- Step Execution status
     sec.short_context, sec.serialized_context -- Step Execution Context
-from batch_job_instance ji
-    left join batch_job_execution je on je.job_instance_id = ji.job_instance_id
-    left join batch_job_execution_params jep on jep.job_execution_id = je.job_execution_id
-    left join batch_job_execution_context jec on jec.job_execution_id = je.job_execution_id
-    left join batch_step_execution se on se.job_execution_id = je.job_execution_id
-    left join batch_step_execution_context sec on sec.step_execution_id = se.step_execution_id
-order by se.step_execution_id desc
+FROM batch_job_instance ji
+    LEFT JOIN batch_job_execution je ON je.job_instance_id = ji.job_instance_id
+    LEFT JOIN batch_job_execution_params jep ON jep.job_execution_id = je.job_execution_id
+    LEFT JOIN batch_job_execution_context jec ON jec.job_execution_id = je.job_execution_id
+    LEFT JOIN batch_step_execution se ON se.job_execution_id = je.job_execution_id
+    LEFT JOIN batch_step_execution_context sec ON sec.step_execution_id = se.step_execution_id
+ORDER BY ji.job_instance_id DESC, je.job_execution_id DESC, se.step_execution_id DESC
 ```
 
