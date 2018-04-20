@@ -5,6 +5,7 @@ import org.springframework.batch.core.Step
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory
+import org.springframework.batch.core.configuration.annotation.StepScope
 import org.springframework.batch.core.launch.support.RunIdIncrementer
 import org.springframework.batch.item.ItemProcessor
 import org.springframework.batch.item.ItemReader
@@ -20,6 +21,7 @@ import org.springframework.batch.item.file.mapping.DefaultLineMapper
 import org.springframework.batch.item.file.mapping.FieldSetMapper
 import org.springframework.batch.item.file.transform.*
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.io.FileSystemResource
@@ -68,15 +70,18 @@ open class ApplicationConfiguration {
     @Bean
     open fun importPeopleStep(): Step = stepBuilderFactory.get("importPeopleStep")
             .chunk<Person, Person>(1)
-            .reader(importPeopleReader())
+            .reader(importPeopleReader("IMPORT_FILE_PATH"))
             .writer(importPeopleWriter())
             .build()
 
     // importPeopleReader
     @Bean
-    open fun importPeopleReader(): ItemReader<Person> {
+    @StepScope
+    open fun importPeopleReader(
+            @Value("#{jobParameters[importFilePath]}") importFilePath: String
+    ): FlatFileItemReader<Person> {
         val reader = FlatFileItemReader<Person>()
-        reader.setResource(FileSystemResource("data/people.txt")) // TODO
+        reader.setResource(FileSystemResource(importFilePath))
         reader.setLineMapper(importPeopleLineMapper())
         return reader
     }
@@ -127,7 +132,7 @@ open class ApplicationConfiguration {
             .chunk<Person, Person>(1)
             .reader(exportPeopleReader())
             .processor(upperCasePeopleProcessor())
-            .writer(exportPeopleWriter())
+            .writer(exportPeopleWriter("EXPORT_FILE_PATH"))
             .build()
 
     // exportPeopleReader
@@ -142,9 +147,12 @@ open class ApplicationConfiguration {
 
     // exportPeopleWriter
     @Bean
-    open fun exportPeopleWriter(): ItemWriter<Person> {
+    @StepScope
+    open fun exportPeopleWriter(
+            @Value("#{jobParameters[exportFilePath]}") exportFilePath: String
+    ): FlatFileItemWriter<Person> {
         val writer = FlatFileItemWriter<Person>()
-        writer.setResource(FileSystemResource("data/people-export.txt")) // TODO
+        writer.setResource(FileSystemResource(exportFilePath))
         writer.setLineAggregator(exportPeopleLineAggregator())
         return writer
     }
