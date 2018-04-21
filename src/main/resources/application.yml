@@ -8,3 +8,5 @@ spring:
         username: family
         password: family
         driverClassName: org.postgresql.Driver
+
+spring.batch.job.names: exportPeopleJob

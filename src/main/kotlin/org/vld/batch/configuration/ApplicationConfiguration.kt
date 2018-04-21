@@ -37,13 +37,13 @@ import javax.sql.DataSource
 open class ApplicationConfiguration {
 
     @Autowired
+    private lateinit var dataSource: DataSource
+
+    @Autowired
     private lateinit var jobBuilderFactory: JobBuilderFactory
 
     @Autowired
     private lateinit var stepBuilderFactory: StepBuilderFactory
-
-    @Autowired
-    private lateinit var dataSource: DataSource
 
     // ** initialJob
     @Bean
@@ -71,6 +71,7 @@ open class ApplicationConfiguration {
     open fun importPeopleStep(): Step = stepBuilderFactory.get("importPeopleStep")
             .chunk<Person, Person>(1)
             .reader(importPeopleReader("IMPORT_FILE_PATH"))
+            .processor(upperCasePeopleProcessor())
             .writer(importPeopleWriter())
             .build()
 
