@@ -9,4 +9,4 @@ spring:
         password: family
         driverClassName: org.postgresql.Driver
 
-spring.batch.job.names: exportPeopleJob
+spring.batch.job.names: splitHumansJob

@@ -19,13 +19,30 @@ import org.springframework.batch.item.file.LineMapper
 import org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper
 import org.springframework.batch.item.file.mapping.DefaultLineMapper
 import org.springframework.batch.item.file.mapping.FieldSetMapper
-import org.springframework.batch.item.file.transform.*
+import org.springframework.batch.item.file.mapping.PatternMatchingCompositeLineMapper
+import org.springframework.batch.item.file.transform.BeanWrapperFieldExtractor
+import org.springframework.batch.item.file.transform.DelimitedLineAggregator
+import org.springframework.batch.item.file.transform.DelimitedLineTokenizer
+import org.springframework.batch.item.file.transform.FieldExtractor
+import org.springframework.batch.item.file.transform.LineAggregator
+import org.springframework.batch.item.file.transform.LineTokenizer
+import org.springframework.batch.item.file.transform.PassThroughLineAggregator
+import org.springframework.batch.item.file.transform.RegexLineTokenizer
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.io.FileSystemResource
 import org.springframework.jdbc.core.BeanPropertyRowMapper
+import org.vld.batch.domain.FemaleBegin
+import org.vld.batch.domain.FemaleContact
+import org.vld.batch.domain.FemaleEnd
+import org.vld.batch.domain.FemaleName
+import org.vld.batch.domain.HumanLine
+import org.vld.batch.domain.MaleBegin
+import org.vld.batch.domain.MaleContact
+import org.vld.batch.domain.MaleEnd
+import org.vld.batch.domain.MaleName
 import org.vld.batch.domain.Person
 import org.vld.batch.listener.SimpleJobExecutionListener
 import org.vld.batch.processor.UpperCasePeopleProcessor
@@ -176,4 +193,101 @@ open class ApplicationConfiguration {
     // upperCasePeopleProcessor
     @Bean
     open fun upperCasePeopleProcessor(): ItemProcessor<Person, Person> = UpperCasePeopleProcessor()
+
+    // ** splitHumansJob
+    @Bean
+    open fun splitHumansJob(): Job = jobBuilderFactory.get("splitHumansJob")
+            .incrementer(RunIdIncrementer())
+            .start(splitHumansStep())
+            .build()
+
+    // splitHumansStep
+    @Bean
+    open fun splitHumansStep(): Step = stepBuilderFactory.get("splitHumansStep")
+            .chunk<HumanLine, HumanLine>(1)
+            .reader(splitHumansReader("MULTI_HUMANS_FILE_PATH"))
+            .writer(splitHumansWriter())
+            .build()
+
+    // splitHumansReader
+    @Bean
+    @StepScope
+    open fun splitHumansReader(
+            @Value("#{jobParameters[multiHumansFilePath]}") multiHumansFilePath: String
+    ): FlatFileItemReader<HumanLine> = FlatFileItemReader<HumanLine>().apply {
+        setResource(FileSystemResource(multiHumansFilePath))
+        setLineMapper(splitHumansLineMapper())
+    }
+    @Bean
+    open fun splitHumansLineMapper(): LineMapper<HumanLine> = PatternMatchingCompositeLineMapper<HumanLine>().apply {
+        setTokenizers(splitHumansLineTokenizers())
+        setFieldSetMappers(splitHumansFieldSetMappers())
+    }
+
+    @Bean
+    open fun splitHumansLineTokenizers(): Map<String, LineTokenizer> = mutableMapOf<String, LineTokenizer>().apply {
+        this["MALE BEGIN*"] = RegexLineTokenizer().apply {
+            setRegex("""(MALE BEGIN)""")
+            setNames(arrayOf("label"))
+        }
+        this["MALE NAME*"] = RegexLineTokenizer().apply {
+            setRegex("""MALE NAME:([^,]*),(.*)""")
+            setNames(arrayOf("firstName", "lastName"))
+        }
+        this["MALE CONTACT*"] = RegexLineTokenizer().apply {
+            setRegex("""MALE CONTACT:([^,]*),(.*)""")
+            setNames(arrayOf("email", "phone"))
+        }
+        this["MALE END*"] = RegexLineTokenizer().apply {
+            setRegex("""(MALE END)""")
+            setNames(arrayOf("label"))
+        }
+
+        this["FEMALE BEGIN*"] = RegexLineTokenizer().apply {
+            setRegex("""(FEMALE BEGIN)""")
+            setNames(arrayOf("label"))
+        }
+        this["FEMALE NAME*"] = RegexLineTokenizer().apply {
+            setRegex("""FEMALE NAME:([^,]*),(.*)""")
+            setNames(arrayOf("firstName", "lastName"))
+        }
+        this["FEMALE CONTACT*"] = RegexLineTokenizer().apply {
+            setRegex("""FEMALE CONTACT:([^,]*),(.*)""")
+            setNames(arrayOf("email", "phone"))
+        }
+        this["FEMALE END*"] = RegexLineTokenizer().apply {
+            setRegex("""(FEMALE END)""")
+            setNames(arrayOf("label"))
+        }
+    }
+
+    @Bean
+    @Suppress("UNCHECKED_CAST")
+    open fun splitHumansFieldSetMappers(): Map<String, FieldSetMapper<HumanLine>?>
+            = mutableMapOf<String, FieldSetMapper<HumanLine>?>().apply {
+        this["MALE BEGIN*"] = BeanWrapperFieldSetMapper<MaleBegin>().apply { setTargetType(MaleBegin::class.java) }
+                as? FieldSetMapper<HumanLine>
+        this["MALE NAME*"] = BeanWrapperFieldSetMapper<MaleName>().apply { setTargetType(MaleName::class.java) }
+                as? FieldSetMapper<HumanLine>
+        this["MALE CONTACT*"] = BeanWrapperFieldSetMapper<MaleContact>().apply { setTargetType(MaleContact::class.java) }
+                as? FieldSetMapper<HumanLine>
+        this["MALE END*"] = BeanWrapperFieldSetMapper<MaleEnd>().apply { setTargetType(MaleEnd::class.java) }
+                as? FieldSetMapper<HumanLine>
+
+        this["FEMALE BEGIN*"] = BeanWrapperFieldSetMapper<FemaleBegin>().apply { setTargetType(FemaleBegin::class.java) }
+                as? FieldSetMapper<HumanLine>
+        this["FEMALE NAME*"] = BeanWrapperFieldSetMapper<FemaleName>().apply { setTargetType(FemaleName::class.java) }
+                as? FieldSetMapper<HumanLine>
+        this["FEMALE CONTACT*"] = BeanWrapperFieldSetMapper<FemaleContact>().apply { setTargetType(FemaleContact::class.java) }
+                as? FieldSetMapper<HumanLine>
+        this["FEMALE END*"] = BeanWrapperFieldSetMapper<FemaleEnd>().apply { setTargetType(FemaleEnd::class.java) }
+                as? FieldSetMapper<HumanLine>
+    }
+
+    // splitHumansWriter
+    @Bean
+    open fun splitHumansWriter(): ItemWriter<HumanLine> = FlatFileItemWriter<HumanLine>().apply {
+        setResource(FileSystemResource("data/multi-humans-export.txt"))
+        setLineAggregator(PassThroughLineAggregator<HumanLine>())
+    }
 }

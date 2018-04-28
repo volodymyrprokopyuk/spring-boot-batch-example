@@ -1,0 +1,8 @@
+MALE BEGIN
+MALE NAME:Volodymyr,Prokopyuk
+MALE CONTACT:vprokopyuk@atsistemas.com,123456789
+MALE END
+FEMALE BEGIN
+FEMALE NAME:Svitlana,Fedoriv
+FEMALE CONTACT:sfedoriv@atsistemas.com,987654321
+FEMALE END
