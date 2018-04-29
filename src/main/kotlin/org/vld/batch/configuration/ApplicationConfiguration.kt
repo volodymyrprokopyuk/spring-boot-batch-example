@@ -49,6 +49,7 @@ import org.vld.batch.domain.Person
 import org.vld.batch.listener.SimpleJobExecutionListener
 import org.vld.batch.processor.UpperCasePeopleProcessor
 import org.vld.batch.reader.AggregateItemReader
+import org.vld.batch.reader.ReadStrategy
 import org.vld.batch.tasklet.JobIdentificationTasklet
 import javax.sql.DataSource
 
@@ -236,12 +237,12 @@ open class ApplicationConfiguration {
             setNames(arrayOf("label"))
         }
         this["MALE NAME*"] = RegexLineTokenizer().apply {
-            setRegex("""MALE NAME:([^,]*),(.*)""")
-            setNames(arrayOf("firstName", "lastName"))
+            setRegex("""(MALE NAME):([^,]*),(.*)""")
+            setNames(arrayOf("label", "firstName", "lastName"))
         }
         this["MALE CONTACT*"] = RegexLineTokenizer().apply {
-            setRegex("""MALE CONTACT:([^,]*),(.*)""")
-            setNames(arrayOf("email", "phone"))
+            setRegex("""(MALE CONTACT):([^,]*),(.*)""")
+            setNames(arrayOf("label", "email", "phone"))
         }
         this["MALE END*"] = RegexLineTokenizer().apply {
             setRegex("""(MALE END)""")
@@ -253,12 +254,12 @@ open class ApplicationConfiguration {
             setNames(arrayOf("label"))
         }
         this["FEMALE NAME*"] = RegexLineTokenizer().apply {
-            setRegex("""FEMALE NAME:([^,]*),(.*)""")
-            setNames(arrayOf("firstName", "lastName"))
+            setRegex("""(FEMALE NAME):([^,]*),(.*)""")
+            setNames(arrayOf("label", "firstName", "lastName"))
         }
         this["FEMALE CONTACT*"] = RegexLineTokenizer().apply {
-            setRegex("""FEMALE CONTACT:([^,]*),(.*)""")
-            setNames(arrayOf("email", "phone"))
+            setRegex("""(FEMALE CONTACT):([^,]*),(.*)""")
+            setNames(arrayOf("label", "email", "phone"))
         }
         this["FEMALE END*"] = RegexLineTokenizer().apply {
             setRegex("""(FEMALE END)""")
@@ -293,7 +294,8 @@ open class ApplicationConfiguration {
     @Bean
     open fun aggregateItemReader(): AggregateItemReader<Human> = AggregateItemReader(
             splitHumansReader("MULTI_HUMANS_FILE_PATH"),
-            HumanBuilderResolver()
+            HumanBuilderResolver()/*,
+            ReadStrategy.CONTINUE_ON_ERROR*/
     )
 
     // splitHumansWriter
