@@ -39,6 +39,7 @@ import org.vld.batch.domain.FemaleContact
 import org.vld.batch.domain.FemaleEnd
 import org.vld.batch.domain.FemaleName
 import org.vld.batch.domain.Human
+import org.vld.batch.domain.HumanBuilderResolver
 import org.vld.batch.domain.HumanLine
 import org.vld.batch.domain.MaleBegin
 import org.vld.batch.domain.MaleContact
@@ -270,27 +271,30 @@ open class ApplicationConfiguration {
     open fun splitHumansFieldSetMappers(): Map<String, FieldSetMapper<HumanLine>?>
             = mutableMapOf<String, FieldSetMapper<HumanLine>?>().apply {
         this["MALE BEGIN*"] = BeanWrapperFieldSetMapper<MaleBegin>().apply { setTargetType(MaleBegin::class.java) }
-                as? FieldSetMapper<HumanLine>
+                as FieldSetMapper<HumanLine>
         this["MALE NAME*"] = BeanWrapperFieldSetMapper<MaleName>().apply { setTargetType(MaleName::class.java) }
-                as? FieldSetMapper<HumanLine>
+                as FieldSetMapper<HumanLine>
         this["MALE CONTACT*"] = BeanWrapperFieldSetMapper<MaleContact>().apply { setTargetType(MaleContact::class.java) }
-                as? FieldSetMapper<HumanLine>
+                as FieldSetMapper<HumanLine>
         this["MALE END*"] = BeanWrapperFieldSetMapper<MaleEnd>().apply { setTargetType(MaleEnd::class.java) }
-                as? FieldSetMapper<HumanLine>
+                as FieldSetMapper<HumanLine>
 
         this["FEMALE BEGIN*"] = BeanWrapperFieldSetMapper<FemaleBegin>().apply { setTargetType(FemaleBegin::class.java) }
-                as? FieldSetMapper<HumanLine>
+                as FieldSetMapper<HumanLine>
         this["FEMALE NAME*"] = BeanWrapperFieldSetMapper<FemaleName>().apply { setTargetType(FemaleName::class.java) }
-                as? FieldSetMapper<HumanLine>
+                as FieldSetMapper<HumanLine>
         this["FEMALE CONTACT*"] = BeanWrapperFieldSetMapper<FemaleContact>().apply { setTargetType(FemaleContact::class.java) }
-                as? FieldSetMapper<HumanLine>
+                as FieldSetMapper<HumanLine>
         this["FEMALE END*"] = BeanWrapperFieldSetMapper<FemaleEnd>().apply { setTargetType(FemaleEnd::class.java) }
-                as? FieldSetMapper<HumanLine>
+                as FieldSetMapper<HumanLine>
     }
 
     // aggregateItemReader
     @Bean
-    open fun aggregateItemReader(): AggregateItemReader<Human> = AggregateItemReader(splitHumansReader("MULTI_HUMANS_FILE_PATH"))
+    open fun aggregateItemReader(): AggregateItemReader<Human> = AggregateItemReader(
+            splitHumansReader("MULTI_HUMANS_FILE_PATH"),
+            HumanBuilderResolver()
+    )
 
     // splitHumansWriter
     @Bean
