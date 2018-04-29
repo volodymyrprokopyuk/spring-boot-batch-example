@@ -38,6 +38,7 @@ import org.vld.batch.domain.FemaleBegin
 import org.vld.batch.domain.FemaleContact
 import org.vld.batch.domain.FemaleEnd
 import org.vld.batch.domain.FemaleName
+import org.vld.batch.domain.Human
 import org.vld.batch.domain.HumanLine
 import org.vld.batch.domain.MaleBegin
 import org.vld.batch.domain.MaleContact
@@ -46,6 +47,7 @@ import org.vld.batch.domain.MaleName
 import org.vld.batch.domain.Person
 import org.vld.batch.listener.SimpleJobExecutionListener
 import org.vld.batch.processor.UpperCasePeopleProcessor
+import org.vld.batch.reader.AggregateItemReader
 import org.vld.batch.tasklet.JobIdentificationTasklet
 import javax.sql.DataSource
 
@@ -204,9 +206,11 @@ open class ApplicationConfiguration {
     // splitHumansStep
     @Bean
     open fun splitHumansStep(): Step = stepBuilderFactory.get("splitHumansStep")
-            .chunk<HumanLine, HumanLine>(1)
-            .reader(splitHumansReader("MULTI_HUMANS_FILE_PATH"))
+            .chunk<Human, Human>(1)
+//            .reader(splitHumansReader("MULTI_HUMANS_FILE_PATH"))
+            .reader(aggregateItemReader())
             .writer(splitHumansWriter())
+            .stream(splitHumansReader("MULTI_HUMANS_FILE_PATH"))
             .build()
 
     // splitHumansReader
@@ -284,10 +288,14 @@ open class ApplicationConfiguration {
                 as? FieldSetMapper<HumanLine>
     }
 
+    // aggregateItemReader
+    @Bean
+    open fun aggregateItemReader(): AggregateItemReader<Human> = AggregateItemReader(splitHumansReader("MULTI_HUMANS_FILE_PATH"))
+
     // splitHumansWriter
     @Bean
-    open fun splitHumansWriter(): ItemWriter<HumanLine> = FlatFileItemWriter<HumanLine>().apply {
+    open fun splitHumansWriter(): ItemWriter<Human> = FlatFileItemWriter<Human>().apply {
         setResource(FileSystemResource("data/multi-humans-export.txt"))
-        setLineAggregator(PassThroughLineAggregator<HumanLine>())
+        setLineAggregator(PassThroughLineAggregator<Human>())
     }
 }
