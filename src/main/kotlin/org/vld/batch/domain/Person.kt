@@ -52,32 +52,17 @@ interface AggregateItemBuilder<T> {
     fun build(): T
 }
 
-abstract class AbstractAggregateItemBuilder<T>(override val errors: MutableList<String> = mutableListOf()) : AggregateItemBuilder<T> {
-
-    protected var expectedLabels: List<String> = listOf()
-
-    protected fun validate(line: HumanLine) {
-        if (!expectedLabels.contains(line.label)) {
-            errors.add("Expected $expectedLabels but ${line.label} found")
-            isComplete = true
-            isValid = false
-        }
-    }
-}
-
 class MaleBuilder(
         override var isValid: Boolean = true,
-        override var isComplete: Boolean = false
-) : AggregateItemBuilder<Male>, AbstractAggregateItemBuilder<Male>() {
+        override var isComplete: Boolean = false,
+        override val errors: MutableList<String> = mutableListOf()
+) : AggregateItemBuilder<Male> {
 
     private var maleBegin: MaleBegin? = null
     private var maleName: MaleName? = null
     private var maleContact: MaleContact? = null
     private var maleEnd: MaleEnd? = null
-
-    init {
-        expectedLabels = listOf("MALE BEGIN")
-    }
+    private var expectedLabels = listOf("MALE BEGIN")
 
     override fun <MaleLine> add(line: MaleLine): AggregateItemBuilder<Male> = this.apply {
         when (line) {
@@ -112,21 +97,27 @@ class MaleBuilder(
             maleContact?.phone ?: "",
             errors
     )
+
+    private fun validate(line: HumanLine) {
+        if (!expectedLabels.contains(line.label)) {
+            errors.add("Expected $expectedLabels but ${line.label} found")
+            isComplete = true
+            isValid = false
+        }
+    }
 }
 
 class FemaleBuilder(
         override var isValid: Boolean = true,
-        override var isComplete: Boolean = false
-) : AggregateItemBuilder<Female>, AbstractAggregateItemBuilder<Female>() {
+        override var isComplete: Boolean = false,
+        override val errors: MutableList<String> = mutableListOf()
+) : AggregateItemBuilder<Female> {
 
     private var femaleBegin: FemaleBegin? = null
     private var femaleName: FemaleName? = null
     private var femaleContact: FemaleContact? = null
     private var femaleEnd: FemaleEnd? = null
-
-    init {
-        expectedLabels = listOf("FEMALE BEGIN")
-    }
+    private var expectedLabels = listOf("FEMALE BEGIN")
 
     override fun <FemaleLine> add(line: FemaleLine): AggregateItemBuilder<Female> = this.apply {
         when (line) {
@@ -161,6 +152,14 @@ class FemaleBuilder(
             femaleContact?.phone ?: "",
             errors
     )
+
+    private fun validate(line: HumanLine) {
+        if (!expectedLabels.contains(line.label)) {
+            errors.add("Expected $expectedLabels but ${line.label} found")
+            isComplete = true
+            isValid = false
+        }
+    }
 }
 
 class HumanItemBuilderClassifier : Classifier<HumanLine, AggregateItemBuilder<Human>> {

@@ -22,16 +22,16 @@ class AggregateItemReader<I, O>(
         if (line == null) return line
         val itemBuilder = builderClassifier.classify(line)
         itemBuilder.add(line)
-        failOnErrorIfRequired(itemBuilder)
+        failOnErrorIfRequested(itemBuilder)
         while (!itemBuilder.isComplete) {
             line = itemReader.read()
             itemBuilder.add(line)
-            failOnErrorIfRequired(itemBuilder)
+            failOnErrorIfRequested(itemBuilder)
         }
         return itemBuilder.build()
     }
 
-    private fun <O> failOnErrorIfRequired(itemBuilder: AggregateItemBuilder<O>) {
+    private fun <O> failOnErrorIfRequested(itemBuilder: AggregateItemBuilder<O>) {
         if (readStrategy == ReadStrategy.FAIL_ON_ERROR && !itemBuilder.isValid) {
             throw UnexpectedInputException("${itemBuilder.errors}")
         }

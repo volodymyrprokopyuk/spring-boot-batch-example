@@ -103,44 +103,34 @@ open class ApplicationConfiguration {
     @StepScope
     open fun importPeopleReader(
             @Value("#{jobParameters[importFilePath]}") importFilePath: String
-    ): FlatFileItemReader<Person> {
-        val reader = FlatFileItemReader<Person>()
-        reader.setResource(FileSystemResource(importFilePath))
-        reader.setLineMapper(importPeopleLineMapper())
-        return reader
+    ): FlatFileItemReader<Person> = FlatFileItemReader<Person>().apply {
+        setResource(FileSystemResource(importFilePath))
+        setLineMapper(importPeopleLineMapper())
     }
 
     @Bean
-    open fun importPeopleLineMapper(): LineMapper<Person> {
-        val lineMapper = DefaultLineMapper<Person>()
-        lineMapper.setLineTokenizer(importPeopleLineTokenizer())
-        lineMapper.setFieldSetMapper(importPeopleFieldSetMapper())
-        return lineMapper
+    open fun importPeopleLineMapper(): LineMapper<Person> = DefaultLineMapper<Person>().apply {
+        setLineTokenizer(importPeopleLineTokenizer())
+        setFieldSetMapper(importPeopleFieldSetMapper())
     }
 
     @Bean
-    open fun importPeopleLineTokenizer(): LineTokenizer {
-        val lineTokenizer = DelimitedLineTokenizer()
-        lineTokenizer.setDelimiter(",")
-        lineTokenizer.setNames(arrayOf("firstName", "lastName"))
-        return lineTokenizer
+    open fun importPeopleLineTokenizer(): LineTokenizer = DelimitedLineTokenizer().apply {
+        setDelimiter(",")
+        setNames(arrayOf("firstName", "lastName"))
     }
 
     @Bean
-    open fun importPeopleFieldSetMapper(): FieldSetMapper<Person> {
-        val fieldSetMapper = BeanWrapperFieldSetMapper<Person>()
-        fieldSetMapper.setTargetType(Person::class.java)
-        return fieldSetMapper
+    open fun importPeopleFieldSetMapper(): FieldSetMapper<Person> = BeanWrapperFieldSetMapper<Person>().apply {
+        setTargetType(Person::class.java)
     }
 
     // importPeopleWriter
     @Bean
-    open fun importPeopleWriter(): ItemWriter<Person> {
-        val writer = JdbcBatchItemWriter<Person>()
-        writer.setDataSource(dataSource)
-        writer.setItemSqlParameterSourceProvider(BeanPropertyItemSqlParameterSourceProvider<Person>())
-        writer.setSql("INSERT INTO family.person(first_name, last_name) VALUES (:firstName, :lastName)")
-        return writer
+    open fun importPeopleWriter(): ItemWriter<Person> = JdbcBatchItemWriter<Person>().apply {
+        setDataSource(dataSource)
+        setItemSqlParameterSourceProvider(BeanPropertyItemSqlParameterSourceProvider<Person>())
+        setSql("INSERT INTO family.person(first_name, last_name) VALUES (:firstName, :lastName)")
     }
 
     // ** exportPeopleJob
@@ -174,26 +164,20 @@ open class ApplicationConfiguration {
     @StepScope
     open fun exportPeopleWriter(
             @Value("#{jobParameters[exportFilePath]}") exportFilePath: String
-    ): FlatFileItemWriter<Person> {
-        val writer = FlatFileItemWriter<Person>()
-        writer.setResource(FileSystemResource(exportFilePath))
-        writer.setLineAggregator(exportPeopleLineAggregator())
-        return writer
+    ): FlatFileItemWriter<Person> = FlatFileItemWriter<Person>().apply {
+        setResource(FileSystemResource(exportFilePath))
+        setLineAggregator(exportPeopleLineAggregator())
     }
 
     @Bean
-    open fun exportPeopleLineAggregator(): LineAggregator<Person> {
-        val lineAggregator = DelimitedLineAggregator<Person>()
-        lineAggregator.setDelimiter(",")
-        lineAggregator.setFieldExtractor(exportPeopleFieldExtractor())
-        return lineAggregator
+    open fun exportPeopleLineAggregator(): LineAggregator<Person> = DelimitedLineAggregator<Person>().apply {
+        setDelimiter(",")
+        setFieldExtractor(exportPeopleFieldExtractor())
     }
 
     @Bean
-    open fun exportPeopleFieldExtractor(): FieldExtractor<Person> {
-        val fieldExtractor = BeanWrapperFieldExtractor<Person>()
-        fieldExtractor.setNames(arrayOf("firstName", "lastName"))
-        return fieldExtractor
+    open fun exportPeopleFieldExtractor(): FieldExtractor<Person> = BeanWrapperFieldExtractor<Person>().apply {
+        setNames(arrayOf("firstName", "lastName"))
     }
 
     // upperCasePeopleProcessor
@@ -211,7 +195,7 @@ open class ApplicationConfiguration {
     @Bean
     open fun splitHumansStep(): Step = stepBuilderFactory.get("splitHumansStep")
             .chunk<Human, Human>(1)
-            .reader(aggregateItemReader())
+            .reader(aggregateHumansReader())
             .writer(splitHumansWriter())
             .stream(splitHumansReader("IMPORT_HUMANS_FILE_PATH"))
             .stream(splitMalesWriter("EXPORT_MALES_FILE_PATH"))
@@ -293,9 +277,9 @@ open class ApplicationConfiguration {
                 as FieldSetMapper<HumanLine>
     }
 
-    // aggregateItemReader
+    // aggregateHumansReader
     @Bean
-    open fun aggregateItemReader(): AggregateItemReader<HumanLine, Human> = AggregateItemReader(
+    open fun aggregateHumansReader(): AggregateItemReader<HumanLine, Human> = AggregateItemReader(
             splitHumansReader("MULTI_HUMANS_FILE_PATH"),
             HumanItemBuilderClassifier()/*,
             ReadStrategy.CONTINUE_ON_ERROR*/
