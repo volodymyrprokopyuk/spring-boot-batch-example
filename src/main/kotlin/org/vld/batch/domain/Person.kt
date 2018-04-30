@@ -1,5 +1,7 @@
 package org.vld.batch.domain
 
+import org.springframework.classify.Classifier
+
 data class Person(
         var firstName: String = "",
         var lastName: String = ""
@@ -64,7 +66,6 @@ abstract class AbstractMultilineItemBuilder<T>(override val errors: MutableList<
     }
 }
 
-
 class MaleBuilder(
         override var isValid: Boolean = true,
         override var isComplete: Boolean = false
@@ -113,6 +114,7 @@ class MaleBuilder(
             errors
     )
 }
+
 class FemaleBuilder(
         override var isValid: Boolean = true,
         override var isComplete: Boolean = false
@@ -162,14 +164,10 @@ class FemaleBuilder(
     )
 }
 
-interface MultilineItemBuilderResolver<L, B> {
-    fun resolve(line: L): B
-}
-
-class HumanBuilderResolver : MultilineItemBuilderResolver<HumanLine, MultilineItemBuilder<Human>> {
+class HumanBuilderClassifier : Classifier<HumanLine, MultilineItemBuilder<Human>> {
 
     @Suppress("UNCHECKED_CAST")
-    override fun resolve(line: HumanLine): MultilineItemBuilder<Human> = when (line) {
+    override fun classify(line: HumanLine): MultilineItemBuilder<Human> = when (line) {
         is MaleLine -> MaleBuilder() as MultilineItemBuilder<Human>
         is FemaleLine -> FemaleBuilder() as MultilineItemBuilder<Human>
         else -> throw IllegalArgumentException("Unknown line $line")

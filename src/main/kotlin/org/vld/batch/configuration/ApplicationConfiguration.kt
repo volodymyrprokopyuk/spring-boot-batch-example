@@ -41,7 +41,7 @@ import org.vld.batch.domain.FemaleContact
 import org.vld.batch.domain.FemaleEnd
 import org.vld.batch.domain.FemaleName
 import org.vld.batch.domain.Human
-import org.vld.batch.domain.HumanBuilderResolver
+import org.vld.batch.domain.HumanBuilderClassifier
 import org.vld.batch.domain.HumanLine
 import org.vld.batch.domain.Male
 import org.vld.batch.domain.MaleBegin
@@ -298,7 +298,7 @@ open class ApplicationConfiguration {
     @Bean
     open fun aggregateItemReader(): AggregateItemReader<Human> = AggregateItemReader(
             splitHumansReader("MULTI_HUMANS_FILE_PATH"),
-            HumanBuilderResolver()/*,
+            HumanBuilderClassifier()/*,
             ReadStrategy.CONTINUE_ON_ERROR*/
     )
 
