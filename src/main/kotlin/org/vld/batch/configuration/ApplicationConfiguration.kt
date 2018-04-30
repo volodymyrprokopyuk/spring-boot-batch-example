@@ -41,7 +41,7 @@ import org.vld.batch.domain.FemaleContact
 import org.vld.batch.domain.FemaleEnd
 import org.vld.batch.domain.FemaleName
 import org.vld.batch.domain.Human
-import org.vld.batch.domain.HumanBuilderClassifier
+import org.vld.batch.domain.HumanItemBuilderClassifier
 import org.vld.batch.domain.HumanLine
 import org.vld.batch.domain.Male
 import org.vld.batch.domain.MaleBegin
@@ -52,7 +52,6 @@ import org.vld.batch.domain.Person
 import org.vld.batch.listener.SimpleJobExecutionListener
 import org.vld.batch.processor.UpperCasePeopleProcessor
 import org.vld.batch.reader.AggregateItemReader
-import org.vld.batch.reader.ReadStrategy
 import org.vld.batch.tasklet.JobIdentificationTasklet
 import javax.sql.DataSource
 
@@ -296,9 +295,9 @@ open class ApplicationConfiguration {
 
     // aggregateItemReader
     @Bean
-    open fun aggregateItemReader(): AggregateItemReader<Human> = AggregateItemReader(
+    open fun aggregateItemReader(): AggregateItemReader<HumanLine, Human> = AggregateItemReader(
             splitHumansReader("MULTI_HUMANS_FILE_PATH"),
-            HumanBuilderClassifier()/*,
+            HumanItemBuilderClassifier()/*,
             ReadStrategy.CONTINUE_ON_ERROR*/
     )
 

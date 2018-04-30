@@ -3,22 +3,21 @@ package org.vld.batch.reader
 import org.springframework.batch.item.ItemReader
 import org.springframework.batch.item.UnexpectedInputException
 import org.springframework.classify.Classifier
-import org.vld.batch.domain.HumanLine
-import org.vld.batch.domain.MultilineItemBuilder
+import org.vld.batch.domain.AggregateItemBuilder
 
 enum class ReadStrategy {
     FAIL_ON_ERROR,
     CONTINUE_ON_ERROR
 }
 
-class AggregateItemReader<T>(
-        private val itemReader: ItemReader<HumanLine>,
-        private val builderClassifier: Classifier<HumanLine, MultilineItemBuilder<T>>,
+class AggregateItemReader<I, O>(
+        private val itemReader: ItemReader<I>,
+        private val builderClassifier: Classifier<I, AggregateItemBuilder<O>>,
         private val readStrategy: ReadStrategy = ReadStrategy.FAIL_ON_ERROR
-) : ItemReader<T> {
+) : ItemReader<O> {
 
     @Suppress("UNCHECKED_CAST")
-    override fun read(): T? {
+    override fun read(): O? {
         var line = itemReader.read()
         if (line == null) return line
         val itemBuilder = builderClassifier.classify(line)
@@ -32,7 +31,7 @@ class AggregateItemReader<T>(
         return itemBuilder.build()
     }
 
-    private fun <T> failOnErrorIfRequired(itemBuilder: MultilineItemBuilder<T>) {
+    private fun <O> failOnErrorIfRequired(itemBuilder: AggregateItemBuilder<O>) {
         if (readStrategy == ReadStrategy.FAIL_ON_ERROR && !itemBuilder.isValid) {
             throw UnexpectedInputException("${itemBuilder.errors}")
         }

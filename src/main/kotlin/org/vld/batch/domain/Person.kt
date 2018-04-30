@@ -44,18 +44,17 @@ data class FemaleName(override var label: String = "", var firstName: String = "
 data class FemaleContact(override var label: String = "", var email: String = "", var phone: String = "") : FemaleLine
 data class FemaleEnd(override var label: String = "") : FemaleLine
 
-interface MultilineItemBuilder<T> {
+interface AggregateItemBuilder<T> {
     var isValid: Boolean
     var isComplete: Boolean
     val errors: MutableList<String>
-    fun <L> add(line: L): MultilineItemBuilder<T>
+    fun <L> add(line: L): AggregateItemBuilder<T>
     fun build(): T
 }
 
-abstract class AbstractMultilineItemBuilder<T>(override val errors: MutableList<String> = mutableListOf()) : MultilineItemBuilder<T> {
+abstract class AbstractAggregateItemBuilder<T>(override val errors: MutableList<String> = mutableListOf()) : AggregateItemBuilder<T> {
 
     protected var expectedLabels: List<String> = listOf()
-    //val errors: MutableList<String> = mutableListOf()
 
     protected fun validate(line: HumanLine) {
         if (!expectedLabels.contains(line.label)) {
@@ -69,7 +68,7 @@ abstract class AbstractMultilineItemBuilder<T>(override val errors: MutableList<
 class MaleBuilder(
         override var isValid: Boolean = true,
         override var isComplete: Boolean = false
-) : MultilineItemBuilder<Male>, AbstractMultilineItemBuilder<Male>() {
+) : AggregateItemBuilder<Male>, AbstractAggregateItemBuilder<Male>() {
 
     private var maleBegin: MaleBegin? = null
     private var maleName: MaleName? = null
@@ -80,7 +79,7 @@ class MaleBuilder(
         expectedLabels = listOf("MALE BEGIN")
     }
 
-    override fun <MaleLine> add(line: MaleLine): MultilineItemBuilder<Male> = this.apply {
+    override fun <MaleLine> add(line: MaleLine): AggregateItemBuilder<Male> = this.apply {
         when (line) {
             is MaleBegin -> {
                 maleBegin = line
@@ -118,7 +117,7 @@ class MaleBuilder(
 class FemaleBuilder(
         override var isValid: Boolean = true,
         override var isComplete: Boolean = false
-) : MultilineItemBuilder<Female>, AbstractMultilineItemBuilder<Female>() {
+) : AggregateItemBuilder<Female>, AbstractAggregateItemBuilder<Female>() {
 
     private var femaleBegin: FemaleBegin? = null
     private var femaleName: FemaleName? = null
@@ -129,7 +128,7 @@ class FemaleBuilder(
         expectedLabels = listOf("FEMALE BEGIN")
     }
 
-    override fun <FemaleLine> add(line: FemaleLine): MultilineItemBuilder<Female> = this.apply {
+    override fun <FemaleLine> add(line: FemaleLine): AggregateItemBuilder<Female> = this.apply {
         when (line) {
             is FemaleBegin -> {
                 femaleBegin = line
@@ -164,12 +163,12 @@ class FemaleBuilder(
     )
 }
 
-class HumanBuilderClassifier : Classifier<HumanLine, MultilineItemBuilder<Human>> {
+class HumanItemBuilderClassifier : Classifier<HumanLine, AggregateItemBuilder<Human>> {
 
     @Suppress("UNCHECKED_CAST")
-    override fun classify(line: HumanLine): MultilineItemBuilder<Human> = when (line) {
-        is MaleLine -> MaleBuilder() as MultilineItemBuilder<Human>
-        is FemaleLine -> FemaleBuilder() as MultilineItemBuilder<Human>
+    override fun classify(line: HumanLine): AggregateItemBuilder<Human> = when (line) {
+        is MaleLine -> MaleBuilder() as AggregateItemBuilder<Human>
+        is FemaleLine -> FemaleBuilder() as AggregateItemBuilder<Human>
         else -> throw IllegalArgumentException("Unknown line $line")
     }
 }
