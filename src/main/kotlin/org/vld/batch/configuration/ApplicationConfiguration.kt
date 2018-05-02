@@ -109,25 +109,25 @@ open class ApplicationConfiguration {
     }
 
     @Bean
-    open fun importPeopleLineMapper(): LineMapper<Person> = DefaultLineMapper<Person>().apply {
+    open fun importPeopleLineMapper(): DefaultLineMapper<Person> = DefaultLineMapper<Person>().apply {
         setLineTokenizer(importPeopleLineTokenizer())
         setFieldSetMapper(importPeopleFieldSetMapper())
     }
 
     @Bean
-    open fun importPeopleLineTokenizer(): LineTokenizer = DelimitedLineTokenizer().apply {
+    open fun importPeopleLineTokenizer(): DelimitedLineTokenizer = DelimitedLineTokenizer().apply {
         setDelimiter(",")
         setNames(arrayOf("firstName", "lastName"))
     }
 
     @Bean
-    open fun importPeopleFieldSetMapper(): FieldSetMapper<Person> = BeanWrapperFieldSetMapper<Person>().apply {
+    open fun importPeopleFieldSetMapper(): BeanWrapperFieldSetMapper<Person> = BeanWrapperFieldSetMapper<Person>().apply {
         setTargetType(Person::class.java)
     }
 
     // importPeopleWriter
     @Bean
-    open fun importPeopleWriter(): ItemWriter<Person> = JdbcBatchItemWriter<Person>().apply {
+    open fun importPeopleWriter(): JdbcBatchItemWriter<Person> = JdbcBatchItemWriter<Person>().apply {
         setDataSource(dataSource)
         setItemSqlParameterSourceProvider(BeanPropertyItemSqlParameterSourceProvider<Person>())
         setSql("INSERT INTO family.person(first_name, last_name) VALUES (:firstName, :lastName)")
@@ -151,7 +151,7 @@ open class ApplicationConfiguration {
 
     // exportPeopleReader
     @Bean
-    open fun exportPeopleReader(): ItemReader<Person> {
+    open fun exportPeopleReader(): JdbcCursorItemReader<Person> {
         val reader = JdbcCursorItemReader<Person>()
         reader.dataSource = dataSource
         reader.sql = "SELECT p.first_name, p.last_name FROM family.person p"
@@ -170,13 +170,13 @@ open class ApplicationConfiguration {
     }
 
     @Bean
-    open fun exportPeopleLineAggregator(): LineAggregator<Person> = DelimitedLineAggregator<Person>().apply {
+    open fun exportPeopleLineAggregator(): DelimitedLineAggregator<Person> = DelimitedLineAggregator<Person>().apply {
         setDelimiter(",")
         setFieldExtractor(exportPeopleFieldExtractor())
     }
 
     @Bean
-    open fun exportPeopleFieldExtractor(): FieldExtractor<Person> = BeanWrapperFieldExtractor<Person>().apply {
+    open fun exportPeopleFieldExtractor(): BeanWrapperFieldExtractor<Person> = BeanWrapperFieldExtractor<Person>().apply {
         setNames(arrayOf("firstName", "lastName"))
     }
 
@@ -211,8 +211,9 @@ open class ApplicationConfiguration {
         setResource(FileSystemResource(importHumansFilePath))
         setLineMapper(splitHumansLineMapper())
     }
+
     @Bean
-    open fun splitHumansLineMapper(): LineMapper<HumanLine> = PatternMatchingCompositeLineMapper<HumanLine>().apply {
+    open fun splitHumansLineMapper(): PatternMatchingCompositeLineMapper<HumanLine> = PatternMatchingCompositeLineMapper<HumanLine>().apply {
         setTokenizers(splitHumansLineTokenizers())
         setFieldSetMappers(splitHumansFieldSetMappers())
     }
@@ -288,7 +289,7 @@ open class ApplicationConfiguration {
     // splitHumansWriter
     @Bean
     @Suppress("UNCHECKED_CAST")
-    open fun splitHumansWriter(): ItemWriter<Human> = ClassifierCompositeItemWriter<Human>().apply {
+    open fun splitHumansWriter(): ClassifierCompositeItemWriter<Human> = ClassifierCompositeItemWriter<Human>().apply {
         setClassifier { classifiable ->
             when (classifiable) {
                 is Male -> splitMalesWriter("EXPORT_MALES_FILE_PATH") as ItemWriter<Human>
