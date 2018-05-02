@@ -7,24 +7,12 @@ import org.springframework.batch.core.configuration.annotation.JobBuilderFactory
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory
 import org.springframework.batch.core.configuration.annotation.StepScope
 import org.springframework.batch.core.launch.support.RunIdIncrementer
-import org.springframework.batch.item.ItemProcessor
-import org.springframework.batch.item.ItemReader
 import org.springframework.batch.item.ItemWriter
-import org.springframework.batch.item.database.BeanPropertyItemSqlParameterSourceProvider
-import org.springframework.batch.item.database.JdbcBatchItemWriter
-import org.springframework.batch.item.database.JdbcCursorItemReader
 import org.springframework.batch.item.file.FlatFileItemReader
 import org.springframework.batch.item.file.FlatFileItemWriter
-import org.springframework.batch.item.file.LineMapper
 import org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper
-import org.springframework.batch.item.file.mapping.DefaultLineMapper
 import org.springframework.batch.item.file.mapping.FieldSetMapper
 import org.springframework.batch.item.file.mapping.PatternMatchingCompositeLineMapper
-import org.springframework.batch.item.file.transform.BeanWrapperFieldExtractor
-import org.springframework.batch.item.file.transform.DelimitedLineAggregator
-import org.springframework.batch.item.file.transform.DelimitedLineTokenizer
-import org.springframework.batch.item.file.transform.FieldExtractor
-import org.springframework.batch.item.file.transform.LineAggregator
 import org.springframework.batch.item.file.transform.LineTokenizer
 import org.springframework.batch.item.file.transform.PassThroughLineAggregator
 import org.springframework.batch.item.file.transform.RegexLineTokenizer
@@ -34,7 +22,6 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.io.FileSystemResource
-import org.springframework.jdbc.core.BeanPropertyRowMapper
 import org.vld.batch.domain.Female
 import org.vld.batch.domain.FemaleBegin
 import org.vld.batch.domain.FemaleContact
@@ -48,141 +35,17 @@ import org.vld.batch.domain.MaleBegin
 import org.vld.batch.domain.MaleContact
 import org.vld.batch.domain.MaleEnd
 import org.vld.batch.domain.MaleName
-import org.vld.batch.domain.Person
-import org.vld.batch.listener.SimpleJobExecutionListener
-import org.vld.batch.processor.UpperCasePeopleProcessor
 import org.vld.batch.reader.AggregateItemReader
-import org.vld.batch.tasklet.JobIdentificationTasklet
-import javax.sql.DataSource
 
 @Configuration
 @EnableBatchProcessing
-open class ApplicationConfiguration {
-
-    @Autowired
-    private lateinit var dataSource: DataSource
+open class SplitHumansJobConfiguration {
 
     @Autowired
     private lateinit var jobBuilderFactory: JobBuilderFactory
 
     @Autowired
     private lateinit var stepBuilderFactory: StepBuilderFactory
-
-    // ** initialJob
-    @Bean
-    open fun initialJob(): Job = jobBuilderFactory.get("initialJob")
-            .incrementer(RunIdIncrementer())
-            .listener(SimpleJobExecutionListener())
-            .start(jobIdentificationStep())
-            .build()
-
-    // jobIdentificationStep
-    @Bean
-    open fun jobIdentificationStep(): Step = stepBuilderFactory.get("jobIdentificationStep")
-            .tasklet(JobIdentificationTasklet())
-            .build()
-
-    // ** importPeopleJob
-    @Bean
-    open fun importPeopleJob(): Job = jobBuilderFactory.get("importPeopleJob")
-            .incrementer(RunIdIncrementer())
-            .start(importPeopleStep())
-            .build()
-
-    // importPeopleStep
-    @Bean
-    open fun importPeopleStep(): Step = stepBuilderFactory.get("importPeopleStep")
-            .chunk<Person, Person>(1)
-            .reader(importPeopleReader("IMPORT_FILE_PATH"))
-            .processor(upperCasePeopleProcessor())
-            .writer(importPeopleWriter())
-            .build()
-
-    // importPeopleReader
-    @Bean
-    @StepScope
-    open fun importPeopleReader(
-            @Value("#{jobParameters[importFilePath]}") importFilePath: String
-    ): FlatFileItemReader<Person> = FlatFileItemReader<Person>().apply {
-        setResource(FileSystemResource(importFilePath))
-        setLineMapper(importPeopleLineMapper())
-    }
-
-    @Bean
-    open fun importPeopleLineMapper(): DefaultLineMapper<Person> = DefaultLineMapper<Person>().apply {
-        setLineTokenizer(importPeopleLineTokenizer())
-        setFieldSetMapper(importPeopleFieldSetMapper())
-    }
-
-    @Bean
-    open fun importPeopleLineTokenizer(): DelimitedLineTokenizer = DelimitedLineTokenizer().apply {
-        setDelimiter(",")
-        setNames(arrayOf("firstName", "lastName"))
-    }
-
-    @Bean
-    open fun importPeopleFieldSetMapper(): BeanWrapperFieldSetMapper<Person> = BeanWrapperFieldSetMapper<Person>().apply {
-        setTargetType(Person::class.java)
-    }
-
-    // importPeopleWriter
-    @Bean
-    open fun importPeopleWriter(): JdbcBatchItemWriter<Person> = JdbcBatchItemWriter<Person>().apply {
-        setDataSource(dataSource)
-        setItemSqlParameterSourceProvider(BeanPropertyItemSqlParameterSourceProvider<Person>())
-        setSql("INSERT INTO family.person(first_name, last_name) VALUES (:firstName, :lastName)")
-    }
-
-    // ** exportPeopleJob
-    @Bean
-    open fun exportPeopleJob(): Job = jobBuilderFactory.get("exportPeopleJob")
-            .incrementer(RunIdIncrementer())
-            .start(exportPeopleStep())
-            .build()
-
-    // exportPeopleStep
-    @Bean
-    open fun exportPeopleStep(): Step = stepBuilderFactory.get("exportPeopleStep")
-            .chunk<Person, Person>(1)
-            .reader(exportPeopleReader())
-            .processor(upperCasePeopleProcessor())
-            .writer(exportPeopleWriter("EXPORT_FILE_PATH"))
-            .build()
-
-    // exportPeopleReader
-    @Bean
-    open fun exportPeopleReader(): JdbcCursorItemReader<Person> {
-        val reader = JdbcCursorItemReader<Person>()
-        reader.dataSource = dataSource
-        reader.sql = "SELECT p.first_name, p.last_name FROM family.person p"
-        reader.setRowMapper(BeanPropertyRowMapper(Person::class.java))
-        return reader
-    }
-
-    // exportPeopleWriter
-    @Bean
-    @StepScope
-    open fun exportPeopleWriter(
-            @Value("#{jobParameters[exportFilePath]}") exportFilePath: String
-    ): FlatFileItemWriter<Person> = FlatFileItemWriter<Person>().apply {
-        setResource(FileSystemResource(exportFilePath))
-        setLineAggregator(exportPeopleLineAggregator())
-    }
-
-    @Bean
-    open fun exportPeopleLineAggregator(): DelimitedLineAggregator<Person> = DelimitedLineAggregator<Person>().apply {
-        setDelimiter(",")
-        setFieldExtractor(exportPeopleFieldExtractor())
-    }
-
-    @Bean
-    open fun exportPeopleFieldExtractor(): BeanWrapperFieldExtractor<Person> = BeanWrapperFieldExtractor<Person>().apply {
-        setNames(arrayOf("firstName", "lastName"))
-    }
-
-    // upperCasePeopleProcessor
-    @Bean
-    open fun upperCasePeopleProcessor(): ItemProcessor<Person, Person> = UpperCasePeopleProcessor()
 
     // ** splitHumansJob
     @Bean

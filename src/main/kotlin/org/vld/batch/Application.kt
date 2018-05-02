@@ -5,13 +5,12 @@ import org.slf4j.LoggerFactory
 import org.springframework.boot.CommandLineRunner
 import org.springframework.boot.SpringApplication
 import org.springframework.boot.autoconfigure.SpringBootApplication
-import org.vld.batch.configuration.ApplicationConfiguration
 
 @SpringBootApplication
 open class Application : CommandLineRunner {
 
     companion object {
-        val logger: Logger = LoggerFactory.getLogger(ApplicationConfiguration::class.java)
+        val logger: Logger = LoggerFactory.getLogger(Application::class.java)
     }
 
     override fun run(vararg args: String?) {
