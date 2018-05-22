@@ -136,7 +136,6 @@ class FemaleBuilder(
 
 class HumanItemBuilderClassifier : Classifier<HumanLine, AggregateItemBuilder<Human>> {
 
-
     override fun classify(line: HumanLine): AggregateItemBuilder<Human> =
             @Suppress("UNCHECKED_CAST")
             when (line) {
@@ -144,4 +143,39 @@ class HumanItemBuilderClassifier : Classifier<HumanLine, AggregateItemBuilder<Hu
                 is FemaleLine -> FemaleBuilder() as AggregateItemBuilder<Human>
                 else -> throw IllegalArgumentException("Unknown line $line")
             }
+}
+
+class MaleIterator(private val male: AggregateMale) : Iterator<Male> {
+
+    private var index = 0
+
+    override fun hasNext(): Boolean = index < male.names.size
+
+    override fun next(): Male {
+        if (!hasNext()) throw ArrayIndexOutOfBoundsException("AggregateMale.names is exhausted")
+        val maleName = male.names[index++]
+        return Male(maleName.firstName, maleName.lastName, male.email, male.phone, male.errors)
+    }
+}
+
+class FemaleIterator(private val female: AggregateFemale) : Iterator<Female> {
+
+    private var index = 0
+
+    override fun hasNext(): Boolean = index < female.names.size
+
+    override fun next(): Female {
+        if (!hasNext()) throw ArrayIndexOutOfBoundsException("AggregateFemale.names is exhausted")
+        val femaleName = female.names[index++]
+        return Female(femaleName.firstName, femaleName.lastName, female.email, female.phone, female.errors)
+    }
+}
+
+class HumanItemIteratorClassifier : Classifier<Human, Iterator<Human>> {
+
+    override fun classify(human: Human): Iterator<Human> = when (human) {
+        is AggregateMale -> MaleIterator(human)
+        is AggregateFemale -> FemaleIterator(human)
+        else -> throw IllegalArgumentException("Unknown human $human")
+    }
 }

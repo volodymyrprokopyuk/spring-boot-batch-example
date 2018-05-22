@@ -36,3 +36,25 @@ class AggregateItemReader<I, O>(
         }
     }
 }
+
+class SplitItemReader<I, O>(
+    private val itemReader: ItemReader<I>,
+    private val iteratorClassifier: Classifier<I, Iterator<O>>
+): ItemReader<O> {
+
+    private var itemIterator: Iterator<O>? = null
+
+    override fun read(): O? {
+        if (itemIterator == null) {
+            val aggregateItem = itemReader.read()
+            if (aggregateItem == null) return aggregateItem
+            itemIterator = iteratorClassifier.classify(aggregateItem)
+        }
+        if (itemIterator?.hasNext() ?: false) {
+            return itemIterator?.next()
+        } else {
+            itemIterator = null
+            return read()
+        }
+    }
+}

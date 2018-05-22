@@ -22,15 +22,16 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.io.FileSystemResource
-import org.vld.batch.domain.Female
 import org.vld.batch.domain.FemaleBegin
 import org.vld.batch.domain.FemaleContact
 import org.vld.batch.domain.FemaleEnd
 import org.vld.batch.domain.FemaleName
 import org.vld.batch.domain.Human
 import org.vld.batch.builder.HumanItemBuilderClassifier
+import org.vld.batch.builder.HumanItemIteratorClassifier
 import org.vld.batch.domain.AggregateFemale
 import org.vld.batch.domain.AggregateMale
+import org.vld.batch.domain.Female
 import org.vld.batch.domain.HumanLine
 import org.vld.batch.domain.Male
 import org.vld.batch.domain.MaleBegin
@@ -38,6 +39,7 @@ import org.vld.batch.domain.MaleContact
 import org.vld.batch.domain.MaleEnd
 import org.vld.batch.domain.MaleName
 import org.vld.batch.reader.AggregateItemReader
+import org.vld.batch.reader.SplitItemReader
 
 @Configuration
 @EnableBatchProcessing
@@ -60,31 +62,31 @@ open class SplitHumansJobConfiguration {
     @Bean
     open fun splitHumansStep(): Step = stepBuilderFactory.get("splitHumansStep")
             .chunk<Human, Human>(1)
-            .reader(aggregateHumansReader())
+            .reader(splitHumansReader())
             .writer(splitHumansWriter())
-            .stream(splitHumansReader("IMPORT_HUMANS_FILE_PATH"))
+            .stream(humanLinesReader("IMPORT_HUMANS_FILE_PATH"))
             .stream(splitMalesWriter("EXPORT_MALES_FILE_PATH"))
             .stream(splitFemalesWriter("EXPORT_FEMALES_FILE_PATH"))
             .build()
 
-    // splitHumansReader
+    // humanLinesReader
     @Bean
     @StepScope
-    open fun splitHumansReader(
+    open fun humanLinesReader(
             @Value("#{jobParameters[importHumansFilePath]}") importHumansFilePath: String
     ): FlatFileItemReader<HumanLine> = FlatFileItemReader<HumanLine>().apply {
         setResource(FileSystemResource(importHumansFilePath))
-        setLineMapper(splitHumansLineMapper())
+        setLineMapper(humanLinesLineMapper())
     }
 
     @Bean
-    open fun splitHumansLineMapper(): PatternMatchingCompositeLineMapper<HumanLine> = PatternMatchingCompositeLineMapper<HumanLine>().apply {
-        setTokenizers(splitHumansLineTokenizers())
-        setFieldSetMappers(splitHumansFieldSetMappers())
+    open fun humanLinesLineMapper(): PatternMatchingCompositeLineMapper<HumanLine> = PatternMatchingCompositeLineMapper<HumanLine>().apply {
+        setTokenizers(humanLinesLineTokenizers())
+        setFieldSetMappers(humanLinesFieldSetMappers())
     }
 
     @Bean
-    open fun splitHumansLineTokenizers(): Map<String, LineTokenizer> = mutableMapOf<String, LineTokenizer>().apply {
+    open fun humanLinesLineTokenizers(): Map<String, LineTokenizer> = mutableMapOf<String, LineTokenizer>().apply {
         this["MALE BEGIN*"] = RegexLineTokenizer().apply {
             setRegex("""(MALE BEGIN)""")
             setNames(arrayOf("label"))
@@ -122,7 +124,7 @@ open class SplitHumansJobConfiguration {
 
     @Bean
     @Suppress("UNCHECKED_CAST")
-    open fun splitHumansFieldSetMappers(): Map<String, FieldSetMapper<HumanLine>?>
+    open fun humanLinesFieldSetMappers(): Map<String, FieldSetMapper<HumanLine>?>
             = mutableMapOf<String, FieldSetMapper<HumanLine>?>().apply {
         this["MALE BEGIN*"] = BeanWrapperFieldSetMapper<MaleBegin>().apply { setTargetType(MaleBegin::class.java) }
                 as FieldSetMapper<HumanLine>
@@ -146,13 +148,18 @@ open class SplitHumansJobConfiguration {
     // aggregateHumansReader
     @Bean
     open fun aggregateHumansReader(): AggregateItemReader<HumanLine, Human> = AggregateItemReader(
-            splitHumansReader("MULTI_HUMANS_FILE_PATH"),
+            humanLinesReader("MULTI_HUMANS_FILE_PATH"),
             HumanItemBuilderClassifier()/*,
             ReadStrategy.CONTINUE_ON_ERROR*/
     )
 
+    // splitHumansReader
+    @Bean
+    open fun splitHumansReader(): SplitItemReader<Human, Human> =
+            SplitItemReader(aggregateHumansReader(), HumanItemIteratorClassifier())
+
     // splitHumansWriter
-    /*@Bean
+    @Bean
     open fun splitHumansWriter(): ClassifierCompositeItemWriter<Human> = ClassifierCompositeItemWriter<Human>().apply {
         setClassifier { classifiable ->
             @Suppress("UNCHECKED_CAST")
@@ -180,15 +187,14 @@ open class SplitHumansJobConfiguration {
     ): FlatFileItemWriter<Female> = FlatFileItemWriter<Female>().apply {
         setResource(FileSystemResource(exportFemalesFilePath))
         setLineAggregator(PassThroughLineAggregator<Female>())
-    }*/
+    }
 
-    @Bean
+    /*@Bean
     open fun splitHumansWriter(): ClassifierCompositeItemWriter<Human> = ClassifierCompositeItemWriter<Human>().apply {
         setClassifier { classifiable ->
-            @Suppress("UNCHECKED_CAST")
             when (classifiable) {
-                is AggregateMale -> splitMalesWriter("EXPORT_MALES_FILE_PATH") as ItemWriter<Human>
-                is AggregateFemale -> splitFemalesWriter("EXPORT_FEMALES_FILE_PATH") as ItemWriter<Human>
+                is AggregateMale -> splitMalesWriter("EXPORT_MALES_FILE_PATH")
+                is AggregateFemale -> splitFemalesWriter("EXPORT_FEMALES_FILE_PATH")
                 else -> throw IllegalArgumentException("Unknown classifieble $classifiable")
             }
         }
@@ -198,17 +204,17 @@ open class SplitHumansJobConfiguration {
     @StepScope
     open fun splitMalesWriter(
             @Value("#{jobParameters[exportMalesFilePath]}") exportMalesFilePath: String
-    ): FlatFileItemWriter<AggregateMale> = FlatFileItemWriter<AggregateMale>().apply {
+    ): FlatFileItemWriter<Human> = FlatFileItemWriter<Human>().apply {
         setResource(FileSystemResource(exportMalesFilePath))
-        setLineAggregator(PassThroughLineAggregator<AggregateMale>())
+        setLineAggregator(PassThroughLineAggregator<Human>())
     }
 
     @Bean
     @StepScope
     open fun splitFemalesWriter(
             @Value("#{jobParameters[exportFemalesFilePath]}") exportFemalesFilePath: String
-    ): FlatFileItemWriter<AggregateFemale> = FlatFileItemWriter<AggregateFemale>().apply {
+    ): FlatFileItemWriter<Human> = FlatFileItemWriter<Human>().apply {
         setResource(FileSystemResource(exportFemalesFilePath))
-        setLineAggregator(PassThroughLineAggregator<AggregateFemale>())
-    }
+        setLineAggregator(PassThroughLineAggregator<Human>())
+    }*/
 }
