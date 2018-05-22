@@ -29,8 +29,6 @@ import org.vld.batch.domain.FemaleName
 import org.vld.batch.domain.Human
 import org.vld.batch.builder.HumanItemBuilderClassifier
 import org.vld.batch.builder.HumanItemIteratorClassifier
-import org.vld.batch.domain.AggregateFemale
-import org.vld.batch.domain.AggregateMale
 import org.vld.batch.domain.Female
 import org.vld.batch.domain.HumanLine
 import org.vld.batch.domain.Male
