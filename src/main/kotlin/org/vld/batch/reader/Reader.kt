@@ -3,7 +3,7 @@ package org.vld.batch.reader
 import org.springframework.batch.item.ItemReader
 import org.springframework.batch.item.UnexpectedInputException
 import org.springframework.classify.Classifier
-import org.vld.batch.domain.AggregateItemBuilder
+import org.vld.batch.builder.AggregateItemBuilder
 
 enum class ReadStrategy {
     FAIL_ON_ERROR,
@@ -16,7 +16,6 @@ class AggregateItemReader<I, O>(
         private val readStrategy: ReadStrategy = ReadStrategy.FAIL_ON_ERROR
 ) : ItemReader<O> {
 
-    @Suppress("UNCHECKED_CAST")
     override fun read(): O? {
         var line = itemReader.read()
         if (line == null) return line
