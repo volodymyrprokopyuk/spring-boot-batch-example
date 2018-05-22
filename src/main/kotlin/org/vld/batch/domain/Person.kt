@@ -9,6 +9,20 @@ interface Human {
     val errors: List<String>
 }
 
+data class AggregateMale(
+        val names: MutableList<MaleName> = mutableListOf(),
+        var email: String = "",
+        var phone: String = "",
+        override val errors: List<String> = listOf()
+) : Human
+
+data class AggregateFemale(
+        val names: MutableList<FemaleName> = mutableListOf(),
+        var email: String = "",
+        var phone: String = "",
+        override val errors: List<String> = listOf()
+) : Human
+
 data class Male(
         var firstName: String = "",
         var lastName: String = "",

@@ -1,6 +1,8 @@
 package org.vld.batch.builder
 
 import org.springframework.classify.Classifier
+import org.vld.batch.domain.AggregateFemale
+import org.vld.batch.domain.AggregateMale
 import org.vld.batch.domain.Female
 import org.vld.batch.domain.FemaleBegin
 import org.vld.batch.domain.FemaleContact
@@ -28,15 +30,15 @@ class MaleBuilder(
         override var isValid: Boolean = true,
         override var isComplete: Boolean = false,
         override val errors: MutableList<String> = mutableListOf()
-) : AggregateItemBuilder<Male> {
+) : AggregateItemBuilder<AggregateMale> {
 
     private var maleBegin: MaleBegin? = null
-    private var maleName: MaleName? = null
+    private var maleNames: MutableList<MaleName> = mutableListOf()
     private var maleContact: MaleContact? = null
     private var maleEnd: MaleEnd? = null
     private var expectedLabels = listOf("MALE BEGIN")
 
-    override fun <MaleLine> add(line: MaleLine): AggregateItemBuilder<Male> = this.apply {
+    override fun <MaleLine> add(line: MaleLine): AggregateItemBuilder<AggregateMale> = this.apply {
         when (line) {
             is MaleBegin -> {
                 maleBegin = line
@@ -44,9 +46,9 @@ class MaleBuilder(
                 expectedLabels = listOf("MALE NAME")
             }
             is MaleName -> {
-                maleName = line
+                maleNames.add(line)
                 validate(line)
-                expectedLabels = listOf("MALE CONTACT")
+                expectedLabels = listOf("MALE NAME", "MALE CONTACT")
             }
             is MaleContact -> {
                 maleContact = line
@@ -62,9 +64,8 @@ class MaleBuilder(
         }
     }
 
-    override fun build(): Male = Male(
-            maleName?.firstName ?: "",
-            maleName?.lastName ?: "",
+    override fun build(): AggregateMale = AggregateMale(
+            maleNames,
             maleContact?.email ?: "",
             maleContact?.phone ?: "",
             errors
@@ -83,15 +84,15 @@ class FemaleBuilder(
         override var isValid: Boolean = true,
         override var isComplete: Boolean = false,
         override val errors: MutableList<String> = mutableListOf()
-) : AggregateItemBuilder<Female> {
+) : AggregateItemBuilder<AggregateFemale> {
 
     private var femaleBegin: FemaleBegin? = null
-    private var femaleName: FemaleName? = null
+    private var femaleNames: MutableList<FemaleName> = mutableListOf()
     private var femaleContact: FemaleContact? = null
     private var femaleEnd: FemaleEnd? = null
     private var expectedLabels = listOf("FEMALE BEGIN")
 
-    override fun <FemaleLine> add(line: FemaleLine): AggregateItemBuilder<Female> = this.apply {
+    override fun <FemaleLine> add(line: FemaleLine): AggregateItemBuilder<AggregateFemale> = this.apply {
         when (line) {
             is FemaleBegin -> {
                 femaleBegin = line
@@ -99,9 +100,9 @@ class FemaleBuilder(
                 expectedLabels = listOf("FEMALE NAME")
             }
             is FemaleName -> {
-                femaleName = line
+                femaleNames.add(line)
                 validate(line)
-                expectedLabels = listOf("FEMALE CONTACT")
+                expectedLabels = listOf("FEMALE NAME", "FEMALE CONTACT")
             }
             is FemaleContact -> {
                 femaleContact = line
@@ -117,9 +118,8 @@ class FemaleBuilder(
         }
     }
 
-    override fun build(): Female = Female(
-            femaleName?.firstName ?: "",
-            femaleName?.lastName ?: "",
+    override fun build(): AggregateFemale = AggregateFemale(
+            femaleNames,
             femaleContact?.email ?: "",
             femaleContact?.phone ?: "",
             errors

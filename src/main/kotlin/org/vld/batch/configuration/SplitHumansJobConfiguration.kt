@@ -29,6 +29,8 @@ import org.vld.batch.domain.FemaleEnd
 import org.vld.batch.domain.FemaleName
 import org.vld.batch.domain.Human
 import org.vld.batch.builder.HumanItemBuilderClassifier
+import org.vld.batch.domain.AggregateFemale
+import org.vld.batch.domain.AggregateMale
 import org.vld.batch.domain.HumanLine
 import org.vld.batch.domain.Male
 import org.vld.batch.domain.MaleBegin
@@ -150,7 +152,7 @@ open class SplitHumansJobConfiguration {
     )
 
     // splitHumansWriter
-    @Bean
+    /*@Bean
     open fun splitHumansWriter(): ClassifierCompositeItemWriter<Human> = ClassifierCompositeItemWriter<Human>().apply {
         setClassifier { classifiable ->
             @Suppress("UNCHECKED_CAST")
@@ -178,5 +180,35 @@ open class SplitHumansJobConfiguration {
     ): FlatFileItemWriter<Female> = FlatFileItemWriter<Female>().apply {
         setResource(FileSystemResource(exportFemalesFilePath))
         setLineAggregator(PassThroughLineAggregator<Female>())
+    }*/
+
+    @Bean
+    open fun splitHumansWriter(): ClassifierCompositeItemWriter<Human> = ClassifierCompositeItemWriter<Human>().apply {
+        setClassifier { classifiable ->
+            @Suppress("UNCHECKED_CAST")
+            when (classifiable) {
+                is AggregateMale -> splitMalesWriter("EXPORT_MALES_FILE_PATH") as ItemWriter<Human>
+                is AggregateFemale -> splitFemalesWriter("EXPORT_FEMALES_FILE_PATH") as ItemWriter<Human>
+                else -> throw IllegalArgumentException("Unknown classifieble $classifiable")
+            }
+        }
+    }
+
+    @Bean
+    @StepScope
+    open fun splitMalesWriter(
+            @Value("#{jobParameters[exportMalesFilePath]}") exportMalesFilePath: String
+    ): FlatFileItemWriter<AggregateMale> = FlatFileItemWriter<AggregateMale>().apply {
+        setResource(FileSystemResource(exportMalesFilePath))
+        setLineAggregator(PassThroughLineAggregator<AggregateMale>())
+    }
+
+    @Bean
+    @StepScope
+    open fun splitFemalesWriter(
+            @Value("#{jobParameters[exportFemalesFilePath]}") exportFemalesFilePath: String
+    ): FlatFileItemWriter<AggregateFemale> = FlatFileItemWriter<AggregateFemale>().apply {
+        setResource(FileSystemResource(exportFemalesFilePath))
+        setLineAggregator(PassThroughLineAggregator<AggregateFemale>())
     }
 }
