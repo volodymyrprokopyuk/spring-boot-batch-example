@@ -50,11 +50,11 @@ class SplitItemReader<I, O>(
             if (aggregateItem == null) return aggregateItem
             itemIterator = iteratorClassifier.classify(aggregateItem)
         }
-        if (itemIterator?.hasNext() ?: false) {
-            return itemIterator?.next()
+        return if (itemIterator?.hasNext() ?: false) {
+            itemIterator?.next()
         } else {
             itemIterator = null
-            return read()
+            read()
         }
     }
 }

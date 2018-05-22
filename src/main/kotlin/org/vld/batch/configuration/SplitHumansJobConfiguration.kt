@@ -188,33 +188,4 @@ open class SplitHumansJobConfiguration {
         setResource(FileSystemResource(exportFemalesFilePath))
         setLineAggregator(PassThroughLineAggregator<Female>())
     }
-
-    /*@Bean
-    open fun splitHumansWriter(): ClassifierCompositeItemWriter<Human> = ClassifierCompositeItemWriter<Human>().apply {
-        setClassifier { classifiable ->
-            when (classifiable) {
-                is AggregateMale -> splitMalesWriter("EXPORT_MALES_FILE_PATH")
-                is AggregateFemale -> splitFemalesWriter("EXPORT_FEMALES_FILE_PATH")
-                else -> throw IllegalArgumentException("Unknown classifieble $classifiable")
-            }
-        }
-    }
-
-    @Bean
-    @StepScope
-    open fun splitMalesWriter(
-            @Value("#{jobParameters[exportMalesFilePath]}") exportMalesFilePath: String
-    ): FlatFileItemWriter<Human> = FlatFileItemWriter<Human>().apply {
-        setResource(FileSystemResource(exportMalesFilePath))
-        setLineAggregator(PassThroughLineAggregator<Human>())
-    }
-
-    @Bean
-    @StepScope
-    open fun splitFemalesWriter(
-            @Value("#{jobParameters[exportFemalesFilePath]}") exportFemalesFilePath: String
-    ): FlatFileItemWriter<Human> = FlatFileItemWriter<Human>().apply {
-        setResource(FileSystemResource(exportFemalesFilePath))
-        setLineAggregator(PassThroughLineAggregator<Human>())
-    }*/
 }
