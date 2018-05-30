@@ -18,4 +18,7 @@ open class Application : CommandLineRunner {
     }
 }
 
-fun main(args: Array<String>) = SpringApplication.run(Application::class.java, *args)
+fun main(args: Array<String>) =
+        System.exit(SpringApplication.exit(SpringApplication.run(Application::class.java, *args)))
+
+

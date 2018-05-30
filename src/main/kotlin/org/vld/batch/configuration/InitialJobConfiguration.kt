@@ -9,6 +9,7 @@ import org.springframework.batch.core.launch.support.RunIdIncrementer
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.vld.batch.listener.JobExitCodeGenerator
 import org.vld.batch.listener.SimpleJobExecutionListener
 import org.vld.batch.tasklet.JobIdentificationTasklet
 
@@ -25,10 +26,17 @@ open class InitialJobConfiguration {
     // ** initialJob
     @Bean
     open fun initialJob(): Job = jobBuilderFactory.get("initialJob")
+            .preventRestart()
             .incrementer(RunIdIncrementer())
-            .listener(SimpleJobExecutionListener())
+            .listener(simpleJobExecutionListener())
             .start(jobIdentificationStep())
             .build()
+
+    @Bean
+    open fun simpleJobExecutionListener(): SimpleJobExecutionListener = SimpleJobExecutionListener()
+
+    @Bean
+    open fun jobExitCodeGenerator(): JobExitCodeGenerator = JobExitCodeGenerator()
 
     // jobIdentificationStep
     @Bean

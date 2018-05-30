@@ -19,6 +19,9 @@ class JobIdentificationTasklet : Tasklet {
         val jobInstanceId = jobExecution?.jobInstance?.id
         val jobExecutionId = jobExecution?.id
         logger.info("TASKLET: jobName = $jobName, jobInstanceId = $jobInstanceId, jobExecutionId = $jobExecutionId")
+        logger.info("VERSION: ${this.javaClass.`package`.implementationTitle} ${this.javaClass.`package`.implementationVersion}")
+//        throw IllegalArgumentException("oh")
+//        throw Exception("oh")
         return RepeatStatus.FINISHED
     }
 }

@@ -24,6 +24,15 @@ springBoot {
 
 version = "0.1.0"
 
+jar {
+    manifest {
+        attributes(
+            "Implementation-Title": "Spring Boot Batch Example",
+            "Implementation-Version": version
+        )
+    }
+}
+
 ext {
     kotlinVersion = "1.2.30"
     springBootVersion = "1.5.10.RELEASE"
