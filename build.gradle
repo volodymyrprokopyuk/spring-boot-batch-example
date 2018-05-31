@@ -1,7 +1,7 @@
 buildscript {
     ext {
         kotlinGradlePluginVersion = "1.2.41"
-        springBootGradlePluginVersion = "1.5.10.RELEASE"
+        springBootGradlePluginVersion = "2.0.2.RELEASE"
     }
 
     repositories {
@@ -18,13 +18,9 @@ apply plugin: "kotlin"
 
 apply plugin: "org.springframework.boot"
 
-springBoot {
-    mainClass = "org.vld.batch.ApplicationKt"
-}
-
 version = "0.1.0"
 
-jar {
+bootJar {
     manifest {
         attributes(
             "Implementation-Title": "Spring Boot Batch Example",
@@ -35,7 +31,7 @@ jar {
 
 ext {
     kotlinVersion = "1.2.41"
-    springBootVersion = "1.5.10.RELEASE"
+    springBootVersion = "2.0.2.RELEASE"
     postgreSqlVersion = "42.2.2"
 }
 

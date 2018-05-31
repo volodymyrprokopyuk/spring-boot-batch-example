@@ -71,7 +71,7 @@ open class ImportPeopleJobConfiguration {
     @Bean
     open fun importPeopleLineTokenizer(): DelimitedLineTokenizer = DelimitedLineTokenizer().apply {
         setDelimiter(",")
-        setNames(arrayOf("firstName", "lastName"))
+        setNames("firstName", "lastName")
     }
 
     @Bean

@@ -87,36 +87,36 @@ open class SplitHumansJobConfiguration {
     open fun humanLinesLineTokenizers(): Map<String, LineTokenizer> = mutableMapOf<String, LineTokenizer>().apply {
         this["MALE BEGIN*"] = RegexLineTokenizer().apply {
             setRegex("""(MALE BEGIN)""")
-            setNames(arrayOf("label"))
+            setNames("label")
         }
         this["MALE NAME*"] = RegexLineTokenizer().apply {
             setRegex("""(MALE NAME):([^,]*),(.*)""")
-            setNames(arrayOf("label", "firstName", "lastName"))
+            setNames("label", "firstName", "lastName")
         }
         this["MALE CONTACT*"] = RegexLineTokenizer().apply {
             setRegex("""(MALE CONTACT):([^,]*),(.*)""")
-            setNames(arrayOf("label", "email", "phone"))
+            setNames("label", "email", "phone")
         }
         this["MALE END*"] = RegexLineTokenizer().apply {
             setRegex("""(MALE END)""")
-            setNames(arrayOf("label"))
+            setNames("label")
         }
 
         this["FEMALE BEGIN*"] = RegexLineTokenizer().apply {
             setRegex("""(FEMALE BEGIN)""")
-            setNames(arrayOf("label"))
+            setNames("label")
         }
         this["FEMALE NAME*"] = RegexLineTokenizer().apply {
             setRegex("""(FEMALE NAME):([^,]*),(.*)""")
-            setNames(arrayOf("label", "firstName", "lastName"))
+            setNames("label", "firstName", "lastName")
         }
         this["FEMALE CONTACT*"] = RegexLineTokenizer().apply {
             setRegex("""(FEMALE CONTACT):([^,]*),(.*)""")
-            setNames(arrayOf("label", "email", "phone"))
+            setNames("label", "email", "phone")
         }
         this["FEMALE END*"] = RegexLineTokenizer().apply {
             setRegex("""(FEMALE END)""")
-            setNames(arrayOf("label"))
+            setNames("label")
         }
     }
 
