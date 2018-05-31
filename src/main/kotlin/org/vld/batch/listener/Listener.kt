@@ -8,10 +8,10 @@ import org.springframework.batch.core.JobExecutionListener
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.ExitCodeGenerator
 
-class SimpleJobExecutionListener : JobExecutionListener {
+class InitialJobExecutionListener : JobExecutionListener {
 
     companion object {
-        val logger: Logger = LoggerFactory.getLogger(SimpleJobExecutionListener::class.java)
+        val logger: Logger = LoggerFactory.getLogger(InitialJobExecutionListener::class.java)
     }
 
     @Autowired
@@ -32,15 +32,15 @@ class JobExitCodeGenerator : ExitCodeGenerator {
     var jobExecution: JobExecution? = null
 
     override fun getExitCode(): Int {
-        return if (jobExecution?.status != BatchStatus.COMPLETED) {
-            if (jobExecution?.allFailureExceptions?.isNotEmpty() ?: false) {
-                val jobException = jobExecution?.allFailureExceptions?.first()
-                when (jobException) {
-                    is IllegalArgumentException -> 11
-                    is Exception -> 12
-                    else -> 1
-                }
-            } else 1
-        } else 0
+        if (jobExecution == null) return 0
+        if (jobExecution?.status == BatchStatus.COMPLETED) return 0
+        return if (jobExecution?.allFailureExceptions?.isNotEmpty() ?: false) {
+            val jobException = jobExecution?.allFailureExceptions?.first()
+            when (jobException) {
+                is IllegalArgumentException -> 11
+                is Exception -> 12
+                else -> 1
+            }
+        } else 1
     }
 }
