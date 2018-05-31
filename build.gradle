@@ -1,6 +1,6 @@
 buildscript {
     ext {
-        kotlinGradlePluginVersion = "1.2.30"
+        kotlinGradlePluginVersion = "1.2.41"
         springBootGradlePluginVersion = "1.5.10.RELEASE"
     }
 
@@ -34,9 +34,9 @@ jar {
 }
 
 ext {
-    kotlinVersion = "1.2.30"
+    kotlinVersion = "1.2.41"
     springBootVersion = "1.5.10.RELEASE"
-    postgreSqlVersion = "42.2.1"
+    postgreSqlVersion = "42.2.2"
 }
 
 repositories {
