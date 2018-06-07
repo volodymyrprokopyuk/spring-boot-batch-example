@@ -24,7 +24,8 @@ bootJar {
     manifest {
         attributes(
             "Implementation-Title": "Spring Boot Batch Example",
-            "Implementation-Version": version
+            "Implementation-Version": version,
+            "Start-Class": "org.vld.batch.ApplicationKt"
         )
     }
 }
