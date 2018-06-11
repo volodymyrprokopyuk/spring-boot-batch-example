@@ -5,8 +5,8 @@ logging:
 spring:
     datasource:
         url: jdbc:postgresql://localhost:5432/people
-        username: family
-        password: family
+        username: postgres
+        password: postgres
         driverClassName: org.postgresql.Driver
 
 spring.batch.initialize-schema: always
