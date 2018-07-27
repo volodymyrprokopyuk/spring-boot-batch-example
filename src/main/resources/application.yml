@@ -6,7 +6,7 @@ spring:
     datasource:
         url: jdbc:postgresql://localhost:5432/people
         username: postgres
-        password: postgres
+        password: Password1!
         driverClassName: org.postgresql.Driver
 
 spring.batch.initialize-schema: always
